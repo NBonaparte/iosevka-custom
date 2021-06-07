@@ -1,0 +1,43 @@
+name: Build font
+on: push
+
+jobs:
+  build_font:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - run: sudo apt install ttfautohint
+      - name: Download Iosevka source
+        run: |
+          VER=$(awk 'NR==1{print $2}' private-build-plans.toml)
+          curl -Lo "$VER.zip" "https://github.com/be5invis/Iosevka/archive/refs/tags/$VER.zip"
+          unzip "$VER.zip"
+          cd Iosevka-*
+          cp ../private-build-plans.toml .
+      - name: Install npm packages
+        run: |
+          cd Iosevka-*
+          npm install
+      - name: Build custom Iosevka
+        run: |
+          cd Iosevka-*
+          npm run build -- ttf::iosevka-nb
+      - name: Create font zip
+        run: |
+          cd Iosevka-*
+          cd dist/iosevka-nb
+          zip -r iosevka-nb.zip *
+          mv iosevka-nb.zip ../../..
+      - name: Get timestamp
+        id: timestamp
+        run: echo "::set-output name=ts::$(date +'%Y-%m-%d')"
+      - name: Upload font zip with release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: iosevka-nb.zip
+          tag: release-${{ steps.timestamp.outputs.ts }}
+          commit: ${{ github.event.head_commit.id }}
+          token: ${{ secrets.CUSTOM_TOKEN }}
