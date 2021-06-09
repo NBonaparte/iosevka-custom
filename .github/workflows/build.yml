@@ -1,5 +1,8 @@
 name: Build font
-on: push
+on:
+  push:
+    paths:
+      - 'private-build-plans.toml'
 
 jobs:
   build_font:
