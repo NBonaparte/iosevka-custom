@@ -1,4 +1,5 @@
 # v7.1.1
+
 [buildPlans.iosevka-nb]
 family = "Iosevka NB"
 spacing = "normal"

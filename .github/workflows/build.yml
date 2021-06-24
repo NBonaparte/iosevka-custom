@@ -2,7 +2,7 @@ name: Build font
 on:
   push:
     paths:
-      - 'private-build-plans.toml'
+      - '**.toml'
 
 jobs:
   build_font:
