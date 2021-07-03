@@ -3,12 +3,17 @@ name: Update version
 on:
   schedule:
     - cron: "0 2 * * *"
+  push:
+    paths:
+      - "**.yml"
 
 jobs:
   update_version:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.CUSTOM_TOKEN }}
       - name: Set release version
         run: |
           VER=$(curl -sL https://api.github.com/repos/be5invis/iosevka/releases/latest | jq -r ".tag_name")

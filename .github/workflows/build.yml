@@ -5,8 +5,18 @@ on:
       - '**.toml'
 
 jobs:
-  build_font:
+  check_release_exists:
     runs-on: ubuntu-latest
+    steps:
+      - id: check
+        run: |
+          VER=$(curl -sL https://api.github.com/repos/NBonaparte/iosevka-custom/releases/latest | jq -r ".tag_name")
+          [[ $VER != "release-$(date +'%Y-%m-%d')" ]]
+  build_font:
+    needs: check_release_exists
+    runs-on: ubuntu-latest
+    # only build if release hasn't been built yet
+    if: needs.check_release_exists.result == 'success'
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
