@@ -6,6 +6,8 @@ on:
   push:
     paths:
       - "**.yml"
+    tags-ignore:
+      - 'release-*'
 
 jobs:
   update_version:

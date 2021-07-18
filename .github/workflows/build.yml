@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - '**.toml'
+    # don't rerun the build if a release already exists
+    tags-ignore:
+      - 'release-*'
 
 jobs:
   check_release_exists:
@@ -24,12 +27,14 @@ jobs:
           node-version: '14'
       - run: sudo apt install ttfautohint
       - name: Download Iosevka source
+        id: iosevka-src
         run: |
           VER=$(awk 'NR==1{print $2}' private-build-plans.toml)
           curl -Lo "$VER.zip" "https://github.com/be5invis/Iosevka/archive/refs/tags/$VER.zip"
           unzip "$VER.zip"
           cd Iosevka-*
           cp ../private-build-plans.toml .
+          echo "::set-output name=version::$VER"
       - name: Install npm packages
         run: |
           cd Iosevka-*
@@ -52,5 +57,6 @@ jobs:
         with:
           artifacts: iosevka-nb.zip
           tag: release-${{ steps.timestamp.outputs.ts }}
+          body: ${{ steps.iosevka-src.outputs.version }}
           commit: ${{ github.event.head_commit.id }}
           token: ${{ secrets.CUSTOM_TOKEN }}
