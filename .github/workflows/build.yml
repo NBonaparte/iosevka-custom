@@ -53,6 +53,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
+      - run: sudo apt update
       - run: sudo apt install ttfautohint
       - name: Download Iosevka source
         run: |
