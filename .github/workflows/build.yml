@@ -4,7 +4,7 @@ on:
     - cron: "0 18 * * *"
   push:
     tags-ignore:
-      - "*"
+      - "release-*"
 
 jobs:
   update_version:
