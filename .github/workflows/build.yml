@@ -83,6 +83,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: iosevka-nb.zip
-          tag: release-${{ needs.check_release_exists.latest_commit }}
-          commit: ${{ needs.check_release_exists.latest_commit }}
+          tag: release-${{ needs.check_release_exists.output.latest_commit }}
+          commit: ${{ needs.check_release_exists.output.latest_commit }}
           token: ${{ secrets.CUSTOM_TOKEN }}
