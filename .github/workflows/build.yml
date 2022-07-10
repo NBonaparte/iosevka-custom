@@ -3,6 +3,8 @@ on:
   schedule:
     - cron: "0 18 * * *"
   push:
+    branches:
+      - "**"
     tags-ignore:
       - "release-*"
 
