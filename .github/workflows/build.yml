@@ -37,16 +37,19 @@ jobs:
     needs: update_version
     runs-on: ubuntu-latest
     outputs:
+      latest_commit_short: ${{ steps.commit-short.outputs.id }}
       latest_commit: ${{ steps.commit.outputs.id }}
       release_exists: ${{ steps.check.outputs.release_exists }}
     steps:
       - uses: actions/checkout@v2
-      - id: commit
+      - id: commit-short
         run: echo ::set-output name=id::$(git rev-parse --short HEAD)
+      - id: commit
+        run: echo ::set-output name=id::$(git rev-parse HEAD)
       - id: check
         run: |
           VER=$(curl -sL https://api.github.com/repos/NBonaparte/iosevka-custom/releases/latest | jq -r ".tag_name")
-          echo ::set-output name=release_exists::$([[ $VER != "release-${{ steps.commit.outputs.id }}" ]] && echo "false" || echo "true")
+          echo ::set-output name=release_exists::$([[ $VER != "release-${{ steps.commit-short.outputs.id }}" ]] && echo "false" || echo "true")
   build_font:
     name: "Build font"
     needs: [update_version, check_release_exists]
@@ -85,6 +88,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: iosevka-nb.zip
-          tag: release-${{ needs.check_release_exists.outputs.latest_commit }}
+          tag: release-${{ needs.check_release_exists.outputs.latest_commit_short }}
           commit: ${{ needs.check_release_exists.outputs.latest_commit }}
           token: ${{ secrets.CUSTOM_TOKEN }}
