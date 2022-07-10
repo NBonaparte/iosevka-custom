@@ -7,9 +7,6 @@ on:
 jobs:
   update_version:
     runs-on: ubuntu-latest
-    outputs:
-      modified: ${{ steps.git-check.outputs.modified }}
-      version: ${{ steps.release-version.outputs.version }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -19,7 +16,6 @@ jobs:
         run: |
           VER=$(curl -sL https://api.github.com/repos/be5invis/iosevka/releases/latest | jq -r ".tag_name")
           sed -i "1s/.*/# $VER/" private-build-plans.toml
-          echo ::set-output name=version::$VER
       - name: Check for modified files
         id: git-check
         run: echo ::set-output name=modified::$([ -z "`git status --porcelain`" ] && echo "false" || echo "true")
@@ -33,21 +29,22 @@ jobs:
   check_release_exists:
     needs: update_version
     runs-on: ubuntu-latest
-    if: needs.update_version.outputs.modified == 'true'
     outputs:
+      latest_commit: ${{ steps.commit.outputs.id }}
       release_exists: ${{ steps.check.outputs.release_exists }}
     steps:
+      - uses: actions/checkout@v2
+      - id: commit
+        run: echo ::set-output name=id::$(git rev-parse --short HEAD)
       - id: check
         run: |
           VER=$(curl -sL https://api.github.com/repos/NBonaparte/iosevka-custom/releases/latest | jq -r ".tag_name")
-          echo ::set-output name=release_exists::$([[ $VER != "release-$(date +'%Y-%m-%d')" ]] && echo "false" || echo "true")
+          echo ::set-output name=release_exists::$([[ $VER != "release-${{ steps.commit.outputs.id }}" ]] && echo "false" || echo "true")
   build_font:
     needs: [update_version, check_release_exists]
     runs-on: ubuntu-latest
     # only build if release hasn't been built yet
     if: needs.check_release_exists.outputs.release_exists == 'false'
-    env:
-      VER: ${{ needs.update_version.outputs.version }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -57,7 +54,7 @@ jobs:
       - run: sudo apt install ttfautohint
       - name: Download Iosevka source
         run: |
-          #VER=$(awk 'NR==1{print $2}' private-build-plans.toml)
+          VER=$(awk 'NR==1{print $2}' private-build-plans.toml)
           curl -Lo "$VER.zip" "https://github.com/be5invis/Iosevka/archive/refs/tags/$VER.zip"
           unzip "$VER.zip"
           cd Iosevka-*
@@ -76,14 +73,10 @@ jobs:
           cd dist/iosevka-nb
           zip -r iosevka-nb.zip *
           mv iosevka-nb.zip ../../..
-      - name: Get timestamp
-        id: timestamp
-        run: echo "::set-output name=ts::$(date +'%Y-%m-%d')"
       - name: Upload font zip with release
         uses: ncipollo/release-action@v1
         with:
           artifacts: iosevka-nb.zip
-          tag: release-${{ steps.timestamp.outputs.ts }}
-          body: ${{ env.VER }}
-          commit: ${{ github.event.head_commit.id }}
+          tag: release-${{ needs.check_release_exists.latest_commit }}
+          commit: ${{ needs.check_release_exists.latest_commit }}
           token: ${{ secrets.CUSTOM_TOKEN }}
