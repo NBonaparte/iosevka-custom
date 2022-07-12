@@ -10,8 +10,8 @@ inherits = "ss20"
 
 [buildPlans.iosevka-nb.variants.design]
 capital-g = "toothless-rounded-serifless-hooked"
-f = "flat-hook"
-g = "single-storey-flat-hook-serifless"
+f = "flat-hook-crossbar-at-x-height"
+g = "double-storey"
 j = "flat-hook-serifed"
 r = "hookless"
 t = "flat-hook"
