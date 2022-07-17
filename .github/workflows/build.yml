@@ -16,7 +16,7 @@ jobs:
       latest_commit: ${{ steps.commit.outputs.id }}
       release_exists: ${{ steps.check.outputs.release_exists }}
       iosevka-ver: ${{ steps.iosevka-ver.outputs.version }}
-      release: ${{ steps.version.outputs.version }}
+      release: ${{ steps.release.outputs.version }}
     steps:
       - uses: actions/checkout@v2
       - id: iosevka-ver
