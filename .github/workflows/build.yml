@@ -9,53 +9,38 @@ on:
       - "release-*"
 
 jobs:
-  update_version:
-    name: "Update Iosevka version"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.CUSTOM_TOKEN }}
-      - name: Set release version
-        id: release-version
-        run: |
-          VER=$(curl -sL https://api.github.com/repos/be5invis/iosevka/releases/latest | jq -r ".tag_name")
-          sed -i "1s/.*/# $VER/" private-build-plans.toml
-          echo ::set-output name=version::$VER
-      - name: Check for modified files
-        id: git-check
-        run: echo ::set-output name=modified::$([ -z "`git status --porcelain`" ] && echo "false" || echo "true")
-      - name: Commit latest release version
-        if: steps.git-check.outputs.modified == 'true'
-        run: |
-          git config --global user.name 'NBonaparte'
-          git config --global user.email 'nbonaparte@users.noreply.github.com'
-          git commit -am "New Iosevka version ${{ steps.release-version.outputs.version }} [skip ci]"
-          git push
   check_release_exists:
-    name: "Check if release exists for latest commit"
-    needs: update_version
+    name: "Check if release exists for latest commit and Iosevka version"
     runs-on: ubuntu-latest
     outputs:
-      latest_commit_short: ${{ steps.commit-short.outputs.id }}
       latest_commit: ${{ steps.commit.outputs.id }}
       release_exists: ${{ steps.check.outputs.release_exists }}
+      iosevka-ver: ${{ steps.iosevka-ver.outputs.version }}
+      release: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v2
+      - id: iosevka-ver
+        run: |
+          VER=$(curl -sL https://api.github.com/repos/be5invis/iosevka/releases/latest | jq -r ".tag_name")
+          echo ::set-output name=version::$VER
       - id: commit-short
         run: echo ::set-output name=id::$(git rev-parse --short HEAD)
       - id: commit
         run: echo ::set-output name=id::$(git rev-parse HEAD)
+      - id: release
+        run: echo ::set-output name=version::"release-${{ steps.iosevka-ver.outputs.version }}-${{ steps.commit-short.outputs.id }}"
       - id: check
         run: |
           VER=$(curl -sL https://api.github.com/repos/NBonaparte/iosevka-custom/releases/latest | jq -r ".tag_name")
-          echo ::set-output name=release_exists::$([[ $VER != "release-${{ steps.commit-short.outputs.id }}" ]] && echo "false" || echo "true")
+          echo ::set-output name=release_exists::$([[ $VER != ${{ steps.release.outputs.version }} ]] && echo "false" || echo "true")
   build_font:
     name: "Build font"
-    needs: [update_version, check_release_exists]
+    needs: check_release_exists
     runs-on: ubuntu-latest
     # only build if release hasn't been built yet
     if: needs.check_release_exists.outputs.release_exists == 'false'
+    env:
+      VER: ${{ needs.check_release_exists.outputs.iosevka-ver }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -65,7 +50,6 @@ jobs:
       - run: sudo apt install ttfautohint
       - name: Download Iosevka source
         run: |
-          VER=$(awk 'NR==1{print $2}' private-build-plans.toml)
           curl -Lo "$VER.zip" "https://github.com/be5invis/Iosevka/archive/refs/tags/$VER.zip"
           unzip "$VER.zip"
           cd Iosevka-*
@@ -88,6 +72,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: iosevka-nb.zip
-          tag: release-${{ needs.check_release_exists.outputs.latest_commit_short }}
+          tag: ${{ needs.check_release_exists.outputs.release }}
           commit: ${{ needs.check_release_exists.outputs.latest_commit }}
           token: ${{ secrets.CUSTOM_TOKEN }}
