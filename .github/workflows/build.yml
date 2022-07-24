@@ -52,26 +52,31 @@ jobs:
         run: |
           curl -Lo "$VER.zip" "https://github.com/be5invis/Iosevka/archive/refs/tags/$VER.zip"
           unzip "$VER.zip"
-          cd Iosevka-*
+          cd Iosevka-${VER/*v/}
           cp ../private-build-plans.toml .
       - name: Install npm packages
         run: |
-          cd Iosevka-*
+          cd Iosevka-${VER/*v/}
           npm install
       - name: Build custom Iosevka
         run: |
-          cd Iosevka-*
+          cd Iosevka-${VER/*v/}
           npm run build -- ttf::iosevka-nb
-      - name: Create font zip
+      - name: Create font zip (without Nerd Fonts)
         run: |
-          cd Iosevka-*
+          cd Iosevka-${VER/*v/}
           cd dist/iosevka-nb
-          zip -r iosevka-nb.zip *
+          zip -rj9 iosevka-nb.zip *
           mv iosevka-nb.zip ../../..
+      - name: Create font zip (with Nerd Fonts)
+        run: |
+          mkdir patched
+          docker run -v Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful
+          zip -rj9 iosevka-nb-patched.zip patched/*
       - name: Upload font zip with release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: iosevka-nb.zip
+          artifacts: iosevka-nb.zip,iosevka-nb-patched.zip
           tag: ${{ needs.check_release_exists.outputs.release }}
           commit: ${{ needs.check_release_exists.outputs.latest_commit }}
           token: ${{ secrets.CUSTOM_TOKEN }}
