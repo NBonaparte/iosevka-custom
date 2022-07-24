@@ -63,11 +63,7 @@ jobs:
           cd Iosevka-${VER/*v/}
           npm run build -- ttf::iosevka-nb
       - name: Create font zip (without Nerd Fonts)
-        run: |
-          cd Iosevka-${VER/*v/}
-          cd dist/iosevka-nb
-          zip -rj9 iosevka-nb.zip *
-          mv iosevka-nb.zip ../../..
+        run: zip -rj9 iosevka-nb.zip Iosevka-${VER/*v/}/dist/iosevka-nb/ttf/*
       - name: Create font zip (with Nerd Fonts)
         run: |
           mkdir patched
