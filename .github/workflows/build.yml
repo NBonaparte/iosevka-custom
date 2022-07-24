@@ -67,7 +67,7 @@ jobs:
       - name: Create font zip (with Nerd Fonts)
         run: |
           mkdir patched
-          docker run -v Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful
+          docker run -v $(pwd)/Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v $(pwd)/patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful
           zip -rj9 iosevka-nb-patched.zip patched/*
       - name: Upload font zip with release
         uses: ncipollo/release-action@v1
