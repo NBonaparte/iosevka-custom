@@ -65,6 +65,7 @@ jobs:
       - name: Create font zip (without Nerd Fonts)
         run: zip -rj9 iosevka-nb.zip Iosevka-${VER/*v/}/dist/iosevka-nb/ttf/*
       - name: Create font zip (with Nerd Fonts)
+        continue-on-error: true
         run: |
           mkdir patched
           docker run -v $(pwd)/Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v $(pwd)/patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful
