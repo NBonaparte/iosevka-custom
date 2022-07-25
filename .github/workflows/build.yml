@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir patched
-          docker run -v $(pwd)/Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v $(pwd)/patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful
+          docker run -v $(pwd)/Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v $(pwd)/patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful || true
           zip -rj9 iosevka-nb-patched.zip patched/*
       - name: Upload font zip with release
         uses: ncipollo/release-action@v1
