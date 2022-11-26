@@ -18,21 +18,21 @@ jobs:
       iosevka-ver: ${{ steps.iosevka-ver.outputs.version }}
       release: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - id: iosevka-ver
         run: |
           VER=$(curl -sL https://api.github.com/repos/be5invis/iosevka/releases/latest | jq -r ".tag_name")
-          echo ::set-output name=version::$VER
+          echo "version=$VER" >> $GITHUB_OUTPUT
       - id: commit-short
-        run: echo ::set-output name=id::$(git rev-parse --short HEAD)
+        run: echo "id=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
       - id: commit
-        run: echo ::set-output name=id::$(git rev-parse HEAD)
+        run: echo "id=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
       - id: release
-        run: echo ::set-output name=version::"release-${{ steps.iosevka-ver.outputs.version }}-${{ steps.commit-short.outputs.id }}"
+        run: echo "version=release-${{ steps.iosevka-ver.outputs.version }}-${{ steps.commit-short.outputs.id }}" >> $GITHUB_OUTPUT
       - id: check
         run: |
           VER=$(curl -sL https://api.github.com/repos/NBonaparte/iosevka-custom/releases/latest | jq -r ".tag_name")
-          echo ::set-output name=release_exists::$([[ $VER != ${{ steps.release.outputs.version }} ]] && echo "false" || echo "true")
+          echo "release_exists=$([[ $VER != ${{ steps.release.outputs.version }} ]] && echo 'false' || echo 'true')" >> $GITHUB_OUTPUT
   build_font:
     name: "Build font"
     needs: check_release_exists
@@ -42,8 +42,8 @@ jobs:
     env:
       VER: ${{ needs.check_release_exists.outputs.iosevka-ver }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: '18'
       - run: sudo apt update
