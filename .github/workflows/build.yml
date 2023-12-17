@@ -48,7 +48,8 @@ jobs:
           node-version: '18'
       - name: Set TTF path
         run: |
-          echo "IOSEVKA_DIR=Iosevka-${VER/*v/}" >> $GITHUB_ENV
+          IOSEVKA_DIR=Iosevka-${VER/*v/}
+          echo "IOSEVKA_DIR=$IOSEVKA_DIR" >> $GITHUB_ENV
           echo "TTF_PATH=$IOSEVKA_DIR/dist/iosevka-nb/TTF" >> $GITHUB_ENV
       - run: sudo apt update
       - run: sudo apt install ttfautohint
