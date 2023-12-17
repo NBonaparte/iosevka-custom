@@ -46,29 +46,33 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
+      - name: Set TTF path
+        run: |
+          echo "IOSEVKA_DIR=Iosevka-${VER/*v/}" >> $GITHUB_ENV
+          echo "TTF_PATH=$IOSEVKA_DIR/dist/iosevka-nb/TTF" >> $GITHUB_ENV
       - run: sudo apt update
       - run: sudo apt install ttfautohint
       - name: Download Iosevka source
         run: |
           curl -Lo "$VER.zip" "https://github.com/be5invis/Iosevka/archive/refs/tags/$VER.zip"
           unzip "$VER.zip"
-          cd Iosevka-${VER/*v/}
+          cd $IOSEVKA_DIR
           cp ../private-build-plans.toml .
       - name: Install npm packages
         run: |
-          cd Iosevka-${VER/*v/}
+          cd $IOSEVKA_DIR
           npm install
       - name: Build custom Iosevka
         run: |
-          cd Iosevka-${VER/*v/}
+          cd $IOSEVKA_DIR
           npm run build -- ttf::iosevka-nb
       - name: Create font zip (without Nerd Fonts)
-        run: zip -rj9 iosevka-nb.zip Iosevka-${VER/*v/}/dist/iosevka-nb/TTF/*
+        run: zip -rj9 iosevka-nb.zip $TTF_PATH/*
       - name: Create font zip (with Nerd Fonts)
         continue-on-error: true
         run: |
           mkdir patched
-          docker run -v $(pwd)/Iosevka-${VER/*v/}/dist/iosevka-nb/ttf:/in -v $(pwd)/patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful || true
+          docker run -v $(pwd)/$TTF_PATH:/in -v $(pwd)/patched:/out nerdfonts/patcher -c -l -q --no-progressbars --careful || true
           zip -rj9 iosevka-nb-patched.zip patched/*
       - name: Upload font zip with release
         uses: ncipollo/release-action@v1
