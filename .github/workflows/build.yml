@@ -18,7 +18,7 @@ jobs:
       iosevka-ver: ${{ steps.iosevka-ver.outputs.version }}
       release: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: iosevka-ver
         run: |
           VER=$(curl -sL https://api.github.com/repos/be5invis/iosevka/releases/latest | jq -r ".tag_name")
@@ -42,10 +42,10 @@ jobs:
     env:
       VER: ${{ needs.check_release_exists.outputs.iosevka-ver }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       - name: Set TTF path
         run: |
           IOSEVKA_DIR=Iosevka-${VER/*v/}
