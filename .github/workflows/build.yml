@@ -30,9 +30,14 @@ jobs:
       - id: release
         run: echo "version=release-${{ steps.iosevka-ver.outputs.version }}-${{ steps.commit-short.outputs.id }}" >> $GITHUB_OUTPUT
       - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          VER=$(curl -sL https://api.github.com/repos/NBonaparte/iosevka-custom/releases/latest | jq -r ".tag_name")
-          echo "release_exists=$([[ $VER != ${{ steps.release.outputs.version }} ]] && echo 'false' || echo 'true')" >> $GITHUB_OUTPUT
+          if gh api "repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.version }}" >/dev/null 2>&1; then
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "release_exists=false" >> $GITHUB_OUTPUT
+          fi
   build_font:
     name: "Build font"
     needs: check_release_exists
